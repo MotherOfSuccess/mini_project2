@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlogModule } from './modules/blog/blog.module';
 import { UserModule } from './modules/user/user.module';
 import { UserEntity } from './modules/user/models/user.entity';
+import { AuthModule } from './modules/auth/auth.module';
 
 
 
@@ -23,6 +24,7 @@ import { UserEntity } from './modules/user/models/user.entity';
     }),
     BlogModule,
     UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

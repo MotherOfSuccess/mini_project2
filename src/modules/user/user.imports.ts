@@ -10,3 +10,5 @@ export const modules = [
 export const providers = [UserService]
 
 export const controllers = [UserController]
+
+export const exps = [UserService]

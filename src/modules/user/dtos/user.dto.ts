@@ -1,11 +1,9 @@
-export interface User {
-    readonly id?: number
+export class User {
+    readonly id: string
     readonly name: string
     readonly gender: string
     readonly age: number
-    readonly username: string
-    readonly pasword: string
+    readonly password: string
     readonly refreshToken?: string
     readonly accessToken?: string
-
 }

@@ -1,15 +1,38 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { UserService } from '../../services/user/user.service';
-import { User } from '../../models/user.interface';
+
 import { UserEntity } from '../../models/user.entity';
-import { Observable } from 'rxjs';
+
+
 
 @Controller('user')
 export class UserController {
     constructor ( private userService: UserService ) {}
 
-    @Post('add-user')
-    createUser(@Body() user: User){
-        return this.userService.create(user)
+    @Get('all')
+    findAll(){
+        return this.userService.findAll();
     }
+
+    @Post('add-user')
+    addUser(@Body() user: UserEntity){
+        return this.userService.addUser(user);
+    }
+
+    @Get('find/:username')
+    findUser(@Param('username') username: string){
+        return this.userService.findOneByUsername(username);
+    }
+
+    @Put('update/:id')
+    updateUser(@Param('id') id: number, @Body() user: UserEntity){
+        return this.userService.updateUser(id, user)
+    }
+
+    @Delete('delete/:id')
+    deleteUser(@Param('id') id: number){
+        return this.userService.deleteUser(id)
+    }
+
+
 }
