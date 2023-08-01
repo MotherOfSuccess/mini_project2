@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { AuthGuard } from '../guards/auth.guard';
 import { LoginDto } from '../dtos/login.dto';
 import { renewDto } from '../dtos/renew.dto';
-
+import { Request } from 'express'
 
 @Controller('auth')
 export class AuthController {
@@ -21,7 +21,15 @@ export class AuthController {
 
     @UseGuards(AuthGuard)
     @Get('profile')
-    getProfile(@Request() req): any{
+    getProfile(@Req() req){
         return req.user;
     }
+
+    @UseGuards(AuthGuard)
+    @Get('logout')
+    async logout(@Req() req) {
+        return this.authService.logout(req.id)
+    }
+
+    
 }

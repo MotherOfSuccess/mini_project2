@@ -10,12 +10,12 @@ import { User } from '../../dtos/user.dto';
 @Injectable()
 export class UserService {
     constructor(
-        @InjectRepository(UserEntity) private readonly userResposity: Repository<UserEntity>,
+        @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
     ) {}
     
     async findAll(): Promise<UserEntity[]>{
 
-        return await this.userResposity.find();
+        return await this.userRepository.find();
 
     }
 
@@ -24,21 +24,30 @@ export class UserService {
         const hash = await this.hashPassword(userAdd.password);
         const userTemp = await {...userAdd, password: hash}
 
-        return await this.userResposity.save(userTemp);
+        return await this.userRepository.save(userTemp);
 
     }
     
     async findOneByUsername(username: string): Promise<UserEntity>{
 
         const condition: FindOneOptions<UserEntity> = {where: {username: username}}
-        const user = await this.userResposity.findOne(condition);
+        const user = await this.userRepository.findOne(condition);
+
+        return user;
+
+    }
+
+    async findOneByID(id: number): Promise<UserEntity>{
+
+        const condition: FindOneOptions<UserEntity> = {where: {id: id}}
+        const user = await this.userRepository.findOne(condition);
 
         return user;
 
     }
 
     async deleteUser(id: number){
-        return await this.userResposity.delete({id: id})
+        return await this.userRepository.delete({id: id})
     }
 
     async updateUser(id: number, user: UpdateUserDto): Promise<UpdateResult>{
@@ -48,11 +57,11 @@ export class UserService {
             const hash = await this.hashPassword(user.password);
             const userTemp = await {...user, password: hash}
 
-            return await this.userResposity.update({id: id}, userTemp)
+            return await this.userRepository.update({id: id}, userTemp)
 
         }
 
-        return await this.userResposity.update({id: id}, user)
+        return await this.userRepository.update({id: id}, user)
 
     }
 

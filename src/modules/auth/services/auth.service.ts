@@ -5,6 +5,8 @@ import { UserService } from '../../user/services/user/user.service';
 import { LoginDto } from '../dtos/login.dto';
 import * as bcrypt from 'bcrypt' 
 import { renewDto } from '../dtos/renew.dto';
+import { UserEntity } from '../../user/models/user.entity';
+
 
 @Injectable()
 export class AuthService {
@@ -81,4 +83,7 @@ export class AuthService {
 
     }
     
+    async logout(id: number){
+        this.userService.updateUser(id, {accessToken: null, refreshToken: null})
+    }
 }

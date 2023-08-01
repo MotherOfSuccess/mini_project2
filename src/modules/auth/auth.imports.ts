@@ -15,3 +15,5 @@ export const modules = [
 export const providers = [AuthService]
 
 export const controllers = [AuthController]
+
+export const exps = [AuthService]
