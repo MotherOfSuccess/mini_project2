@@ -1,7 +1,7 @@
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { CategoryController } from "./controllers/category.controller"
 import { CategoryService } from "./services/category.service"
-import { CategotyEntity } from "./models/category.entity"
+import { CategotyEntity } from "./../../entities/category.entity"
 
 export const modules = [
 

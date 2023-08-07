@@ -1,37 +1,39 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlogModule } from './modules/blog/blog.module';
 import { UserModule } from './modules/user/user.module';
-import { UserEntity } from './modules/user/models/user.entity';
+import { UserEntity } from './entities/user.entity';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoryModule } from './modules/category/category.module';
-import { CategotyEntity } from './modules/category/models/category.entity';
-import { BlogEntity } from './modules/blog/models/blog.entity';
-
-
+import { CategotyEntity } from './entities/category.entity';
+import { BlogEntity } from './entities/blog.entity';
+import { applyMiddlewares } from './utils';
+import { CacheModule } from '@nestjs/cache-manager';
+import { cacheFactory } from './factories/cache.factory';
+import { typeormFactory } from './factories/typeorm.factory';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.POSTGRE_HOST,
-      port: parseInt(<string>process.env.POSTGRE_PORT),
-      username: process.env.POSTGRE_USER,
-      password: process.env.POSTGRE_PASSWORD,
-      database: process.env.POSTGRE_DATABASE,
-      entities: [UserEntity, CategotyEntity, BlogEntity]
-    }),
+    ConfigModule.forRoot(
+      { 
+        isGlobal: true,
+      }
+    ),
+    TypeOrmModule.forRootAsync(typeormFactory),
     BlogModule,
     UserModule,
     AuthModule,
     CategoryModule,
-
+    CacheModule.registerAsync(cacheFactory),
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+      applyMiddlewares(consumer)
+  }
+}

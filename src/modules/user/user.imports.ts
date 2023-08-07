@@ -1,7 +1,7 @@
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { UserEntity } from "./models/user.entity";
-import { UserService } from "./services/user/user.service";
-import { UserController } from "./controllers/user/user.controller";
+import { UserEntity } from "./../../entities/user.entity";
+import { UserService } from "./services/user.service";
+import { UserController } from "./controllers/user.controller";
 
 export const modules = [
     TypeOrmModule.forFeature([UserEntity])

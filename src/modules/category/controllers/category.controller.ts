@@ -1,15 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseInterceptors } from '@nestjs/common';
 import { CategoryService } from '../services/category.service';
 import { CreateCategoryDto } from '../dtos/create-category.dto';
 import { UpdateCategoryDto } from '../dtos/update-category.dto';
 
+import { AppInterceptor } from '../../../interceptors';
+
+@UseInterceptors(AppInterceptor)
 @Controller('category')
 export class CategoryController {
     constructor (private categoryService: CategoryService) {}
 
     @Get('all')
     getAll() {
-        this.categoryService.getAll();
+        return this.categoryService.getAll();
     }
 
     @Get('find/:id')

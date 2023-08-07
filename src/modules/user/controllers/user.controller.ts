@@ -1,12 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { UserService } from '../../services/user/user.service';
-
-import { UserEntity } from '../../models/user.entity';
-import { CreateUserDto } from '../../dtos/create-user.dto';
-import { UpdateUserDto } from '../../dtos/update-user.dto';
-
+import { Body, Controller, Delete, Get, Param, Post, Put, UseInterceptors } from '@nestjs/common';
+import { UserService } from '../services/user.service';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+import { AppInterceptor } from '../../../interceptors';
 
 
+@UseInterceptors(AppInterceptor)
 @Controller('user')
 export class UserController {
     constructor ( private userService: UserService ) {}

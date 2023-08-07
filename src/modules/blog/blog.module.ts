@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { controllers, modules, providers } from './blog.imports';
+import { controllers, exps, modules, providers } from './blog.imports';
 
 
 @Module({
@@ -8,7 +8,9 @@ import { controllers, modules, providers } from './blog.imports';
 
     controllers: controllers,
     
-    providers: providers
+    providers: providers,
+
+    exports: exps
 
 })
 export class BlogModule {}

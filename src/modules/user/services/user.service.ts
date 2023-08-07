@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository, UpdateResult } from 'typeorm';
-import { UserEntity } from '../../models/user.entity';
+import { UserEntity } from '../../../entities/user.entity';
 import * as bcrypt from 'bcrypt';
-import { UpdateUserDto } from '../../dtos/update-user.dto';
-import { CreateUserDto } from '../../dtos/create-user.dto';
-import { User } from '../../dtos/user.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+import { CreateUserDto } from '../dtos/create-user.dto';
 
 @Injectable()
 export class UserService {
@@ -47,7 +46,9 @@ export class UserService {
     }
 
     async deleteUser(id: number){
+
         return await this.userRepository.delete({id: id})
+        
     }
 
     async updateUser(id: number, user: UpdateUserDto): Promise<UpdateResult>{
@@ -60,7 +61,6 @@ export class UserService {
             return await this.userRepository.update({id: id}, userTemp)
 
         }
-
         return await this.userRepository.update({id: id}, user)
 
     }

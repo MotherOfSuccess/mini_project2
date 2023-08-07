@@ -1,3 +1,6 @@
+import { CategotyEntity } from "../../../entities/category.entity"
+import { UserEntity } from "../../../entities/user.entity"
+
 export class UpdateBlogDto {
 
     readonly id_author?: number
