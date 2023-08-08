@@ -1,16 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { UserEntity } from '../../../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager'
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     ) {}
     
     async findAll(): Promise<UserEntity[]>{
@@ -27,7 +29,16 @@ export class UserService {
         const hash = await this.hashPassword(userAdd.password);
         const userTemp = await {...userAdd, password: hash}
 
-        return await this.userRepository.save(userTemp);
+        const userFind = await this.findOneByUsername(userAdd.username)
+
+        if(!userFind){
+
+            this.cacheManager.del("user_all")
+
+            return await this.userRepository.save(userTemp);
+        }
+
+        throw new ForbiddenException()
 
     }
     
@@ -41,7 +52,7 @@ export class UserService {
             return user;
         }
 
-        throw new NotFoundException("User not found")
+        return null
 
     }
 
@@ -55,15 +66,17 @@ export class UserService {
             return await user;
         }
 
-        throw new NotFoundException("User not found")
+        throw new NotFoundException("User is not found")
 
     }
 
     async deleteUser(id: number){
-        const user = this.findOneByID(id)
+        const user = await this.findOneByID(id)
 
         if(user){
 
+            this.cacheManager.del("user_all")
+            
             return await this.userRepository.delete({id: id})
         }
 
@@ -77,6 +90,8 @@ export class UserService {
 
         if(user){
 
+            this.cacheManager.del("user_all")
+            
             if(userUpdate.password != null){
 
                 const hash = await this.hashPassword(userUpdate.password);

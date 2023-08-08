@@ -3,7 +3,6 @@ import { IsNotEmpty } from "class-validator"
 
 export class CreateBlogDto {
 
-    @IsNotEmpty()
     readonly id_author: number
 
     @IsNotEmpty()
@@ -19,7 +18,7 @@ export class CreateBlogDto {
 
     readonly image?: string[]
 
-    @IsNotEmpty()
+
     readonly datetime: Date
 
 }

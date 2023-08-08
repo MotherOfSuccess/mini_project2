@@ -13,7 +13,7 @@ export class AppMiddleware implements NestMiddleware {
         const data = await this.cacheManager.get(key)
 
         console.log(key)
-
+        
         if(data) {
             return res.status(200).json(data)
         }
