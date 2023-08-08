@@ -1,4 +1,4 @@
-import { IsNotEmpty, Max, Min } from "class-validator"
+import { IsNotEmpty } from "class-validator"
 import { IsBiggerThan } from "../../../decorators/decorator"
 import { Transform } from "class-transformer"
 
