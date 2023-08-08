@@ -1,11 +1,11 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../../user/services/user.service';
 import { LoginDto } from '../dtos/login.dto';
 import * as bcrypt from 'bcrypt' 
 import { renewDto } from '../dtos/renew.dto';
-import { UserEntity } from '../../../entities/user.entity';
+import { UpdateResult } from 'typeorm';
 
 
 @Injectable()
@@ -73,17 +73,40 @@ export class AuthService {
     }
 
     async refresh (token: renewDto) {
+        try {
 
-        const user = await this.jwtService.verifyAsync(token.refreshToken);
-        const accessToken = await this.getAccessToken(user.id, user.username, token.refreshToken)
+            const user = await this.jwtService.verifyAsync(token.refreshToken);
+            
+            if(user){
+    
+                const accessToken = await this.getAccessToken(user.id, user.username, token.refreshToken)
+    
+                this.userService.updateUser(user.id, {accessToken: accessToken})
+    
+                return accessToken;
+    
+            } else {
 
-        this.userService.updateUser(user.id, {accessToken: accessToken})
+                throw new UnauthorizedException()
 
-        return accessToken;
+            }
+        } catch {
+            throw new UnauthorizedException("Jwt malformed")
+        }
 
     }
     
-    async logout(id: number){
-        this.userService.updateUser(id, {accessToken: null, refreshToken: null})
+    async logout(id: number): Promise<UpdateResult>{
+
+        const user = this.userService.findOneByID(id)
+        
+        if(user){
+
+            return this.userService.updateUser(id, {accessToken: null, refreshToken: null})
+
+        } else {
+            throw new NotFoundException("Không tìm thấy user")
+        }
+
     }
 }

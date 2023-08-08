@@ -1,8 +1,8 @@
-import { TypeOrmModule, TypeOrmModuleAsyncOptions, TypeOrmModuleOptions } from "@nestjs/typeorm";
+import { TypeOrmModuleAsyncOptions } from "@nestjs/typeorm";
 import { BlogEntity } from "../entities/blog.entity";
 import { CategotyEntity } from "../entities/category.entity";
 import { UserEntity } from "../entities/user.entity";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 
 export const typeormFactory: TypeOrmModuleAsyncOptions = {
 

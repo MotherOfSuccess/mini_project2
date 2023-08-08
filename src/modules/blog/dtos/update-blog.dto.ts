@@ -1,5 +1,3 @@
-import { CategotyEntity } from "../../../entities/category.entity"
-import { UserEntity } from "../../../entities/user.entity"
 
 export class UpdateBlogDto {
 
@@ -13,6 +11,6 @@ export class UpdateBlogDto {
 
     readonly image?: string[]
 
-    readonly datetime?: string
+    readonly datetime?: Date
 
 }

@@ -15,10 +15,10 @@ export class UserEntity {
     @Column()
     age: number;
 
-    @Column({ length: 20, unique: true })
+    @Column({ length: 10, unique: true })
     username: string;
 
-    @Column()
+    @Column({ length: 10})
     password: string;
 
     @Column({ length: 100, nullable: true, default: null })

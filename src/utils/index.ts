@@ -1,4 +1,4 @@
-import { Injectable, MiddlewareConsumer, RequestMethod } from "@nestjs/common";
+import { MiddlewareConsumer, RequestMethod } from "@nestjs/common";
 import { AppMiddleware } from "../middlewares";
 
 export const applyMiddlewares = (consumer: MiddlewareConsumer) => {
@@ -20,5 +20,5 @@ export const getKey = async (url: string) => {
     
     const key = await arr.join('_')
 
-    return key
+    return key ?? null
 }

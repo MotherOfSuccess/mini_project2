@@ -18,7 +18,6 @@ export class AppMiddleware implements NestMiddleware {
             return res.status(200).json(data)
         }
 
-
         next()
     }
 

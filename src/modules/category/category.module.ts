@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { controllers, modules, providers } from './category.imports';
+import { controllers, exps, modules, providers } from './category.imports';
 
 
 @Module({
@@ -9,6 +9,8 @@ import { controllers, modules, providers } from './category.imports';
   controllers: controllers,
 
   providers: providers,
+
+  exports: exps
   
 })
 export class CategoryModule {}

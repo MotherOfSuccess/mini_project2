@@ -12,3 +12,5 @@ export const modules = [
 export const providers = [CategoryService]
 
 export const controllers = [CategoryController] 
+
+export const exps = [CategoryService]

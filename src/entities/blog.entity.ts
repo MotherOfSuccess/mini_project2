@@ -26,6 +26,6 @@ export class BlogEntity {
     image: string[];
 
     @Column()
-    datetime: string;
+    datetime: Date;
 
 }

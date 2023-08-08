@@ -3,11 +3,11 @@ import {
     Controller, 
     FileTypeValidator, 
     Get, 
-    Inject, 
     MaxFileSizeValidator, 
     Param, 
     ParseFilePipe, 
     Post, 
+    Query, 
     Request, 
     UploadedFiles, 
     UseGuards, 
@@ -19,6 +19,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { UpdateBlogDto } from '../dtos/update-blog.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AppInterceptor } from '../../../interceptors';
+import { PaginateBlogDto } from '../dtos/paginate.dto';
 
 @UseInterceptors(AppInterceptor)
 @Controller('blog')
@@ -28,9 +29,8 @@ export class BlogController {
     ){}
 
     @Get('all')
-    getAll(){
-        console.log('Get All')
-        return this.blogService.getAll()
+    getAll(@Query() {page, limit}: PaginateBlogDto){
+        return this.blogService.getAll(page, limit)
     }
 
     @UseGuards(AuthGuard)
@@ -54,9 +54,12 @@ export class BlogController {
     uploadImage(@Param('id') id: number, @UploadedFiles(
         new ParseFilePipe({
             validators: [
+
                 new MaxFileSizeValidator({ maxSize: 100000 * 10 }),
                 new FileTypeValidator({ fileType: 'image' }),
+
             ],
+
             fileIsRequired: false,
         })
     ) images: Array<Express.Multer.File>) : string{

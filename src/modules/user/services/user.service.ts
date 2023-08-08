@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { UserEntity } from '../../../entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
+
 
 @Injectable()
 export class UserService {
@@ -13,8 +14,11 @@ export class UserService {
     ) {}
     
     async findAll(): Promise<UserEntity[]>{
-
-        return await this.userRepository.find();
+        const users = await this.userRepository.find()
+        if(users){
+            return users
+        }
+        throw new NotFoundException("Users not found")
 
     }
 
@@ -32,42 +36,71 @@ export class UserService {
         const condition: FindOneOptions<UserEntity> = {where: {username: username}}
         const user = await this.userRepository.findOne(condition);
 
-        return user;
+        if(user){
+
+            return user;
+        }
+
+        throw new NotFoundException("User not found")
 
     }
 
     async findOneByID(id: number): Promise<UserEntity>{
 
-        const condition: FindOneOptions<UserEntity> = {where: {id: id}}
+        const condition: FindOneOptions<UserEntity> = await {where: {id: id}}
         const user = await this.userRepository.findOne(condition);
 
-        return user;
+        if(user){
+
+            return await user;
+        }
+
+        throw new NotFoundException("User not found")
 
     }
 
     async deleteUser(id: number){
+        const user = this.findOneByID(id)
 
-        return await this.userRepository.delete({id: id})
+        if(user){
+
+            return await this.userRepository.delete({id: id})
+        }
+
+        throw new NotFoundException("User not found")
         
     }
 
-    async updateUser(id: number, user: UpdateUserDto): Promise<UpdateResult>{
+    async updateUser(id: number, userUpdate: UpdateUserDto): Promise<UpdateResult>{
 
-        if(user.password != null){
+        const user = await this.findOneByID(id)
 
-            const hash = await this.hashPassword(user.password);
-            const userTemp = await {...user, password: hash}
+        if(user){
 
-            return await this.userRepository.update({id: id}, userTemp)
+            if(userUpdate.password != null){
 
+                const hash = await this.hashPassword(userUpdate.password);
+                const userTemp = await {...userUpdate, password: hash}
+    
+                return await this.userRepository.update({id: id}, userTemp)
+            }
+
+            return await this.userRepository.update({id: id}, userUpdate)
         }
-        return await this.userRepository.update({id: id}, user)
+        
+        throw new NotFoundException("User not found")
+        
 
     }
 
     async hashPassword(password: string){
 
-        return await bcrypt.hash(password, 10);
+        if(password != ""){
+
+            return await bcrypt.hash(password, 10);
+        }
+
+        throw "Password is empty"
 
     }
 
