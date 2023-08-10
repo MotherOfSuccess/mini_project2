@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, FindOneOptions, Repository, UpdateResult } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { BlogEntity } from '../../../entities/blog.entity';
 import { CreateBlogDto } from '../dtos/create-blog.dto';
 import { UserService } from '../../user/services/user.service';

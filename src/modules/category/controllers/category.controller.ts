@@ -2,7 +2,6 @@ import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, UseInterce
 import { CategoryService } from '../services/category.service';
 import { CreateCategoryDto } from '../dtos/create-category.dto';
 import { UpdateCategoryDto } from '../dtos/update-category.dto';
-
 import { AppInterceptor } from '../../../interceptors';
 import { getRespone } from '../../../utils';
 import { NotFoundException } from '../../../exceptions/NotFoundException';

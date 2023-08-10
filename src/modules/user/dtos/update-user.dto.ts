@@ -1,6 +1,6 @@
 import { Transform } from "class-transformer"
 import { IsBiggerThan } from "../../../decorators/decorator"
-import { IsOptional, Max } from "class-validator"
+import { IsOptional } from "class-validator"
 
 export class UpdateUserDto {
     @IsOptional()

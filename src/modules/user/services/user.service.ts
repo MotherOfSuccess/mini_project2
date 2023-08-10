@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException, Response } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { UserEntity } from '../../../entities/user.entity';
@@ -7,7 +7,6 @@ import { UpdateUserDto } from '../dtos/update-user.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager'
-import { getRespone } from '../../../utils';
 import { NotSuccessException } from '../../../exceptions/NotSuccessException';
 
 @Injectable()
