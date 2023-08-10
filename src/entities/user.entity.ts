@@ -21,10 +21,10 @@ export class UserEntity {
     @Column({ length: 10})
     password: string;
 
-    @Column({ length: 100, nullable: true, default: null })
+    @Column({ nullable: true, default: null })
     refreshToken: string;
 
-    @Column({ length: 100, nullable: true, default: null })
+    @Column({ nullable: true, default: null })
     accessToken: string;
 
 }

@@ -3,6 +3,7 @@ import {
     Controller, 
     FileTypeValidator, 
     Get, 
+    HttpStatus, 
     MaxFileSizeValidator, 
     Param, 
     ParseFilePipe, 
@@ -20,6 +21,9 @@ import { UpdateBlogDto } from '../dtos/update-blog.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AppInterceptor } from '../../../interceptors';
 import { PaginateBlogDto } from '../dtos/paginate.dto';
+import { getRespone } from '../../../utils';
+import { NotFoundException } from '../../../exceptions/NotFoundException';
+import { NotSuccessException } from '../../../exceptions/NotSuccessException';
 
 @UseInterceptors(AppInterceptor)
 @Controller('blog')
@@ -28,25 +32,51 @@ export class BlogController {
         private blogService: BlogService,
     ){}
 
+    @Get('find/:id')
+    async getBlog(@Param('id') id: number){
+        const temp = await this.blogService.findBlogByID(id)
+        if(temp){
+
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotFoundException("Blog")
+    }
+
     @Get('all')
-    getAll(@Query() {page, limit}: PaginateBlogDto){
-        return this.blogService.getAll(page, limit)
+    async getAll(@Query() {page, limit}: PaginateBlogDto){
+        const temp = await this.blogService.getAll(page, limit)
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotFoundException("Blogs")
     }
 
     @UseGuards(AuthGuard)
     @Post('add')
-    addBlog(@Request() req, @Body() blog: CreateBlogDto) {
-        return this.blogService.addBlog(blog, req.user.id);
+    async addBlog(@Request() req, @Body() blog: CreateBlogDto) {
+        const temp = await this.blogService.addBlog(blog, req.user.id);
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotSuccessException('add blog')
     }
 
     @Post('update/:id')
-    updateBlog(@Param('id') id: number, @Body() blog: UpdateBlogDto){
-        return this.blogService.updateBlog(id, blog)
+    async updateBlog(@Param('id') id: number, @Body() blog: UpdateBlogDto){
+        const temp = await this.blogService.updateBlog(id, blog)
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotSuccessException('update blog')
     } 
 
     @Get('delete/:id')
-    deleteBlog(@Param('id') id: number){
-        return this.blogService.deleteBlog(id)
+    async deleteBlog(@Param('id') id: number){
+        const temp = await this.blogService.deleteBlog(id)
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotSuccessException('delete blog')
     }
 
     @Post('upload/:id')
@@ -62,7 +92,7 @@ export class BlogController {
 
             fileIsRequired: false,
         })
-    ) images: Array<Express.Multer.File>) : string{
+    ) images: Array<Express.Multer.File>) : any{
         
         const arrayImage = images.map((image) => {return image.destination})
 
@@ -70,7 +100,7 @@ export class BlogController {
         
         this.blogService.updateBlog(id, updateUrl)
 
-        return 'Success'
+        return getRespone(arrayImage, HttpStatus.OK, "Success")
     }
     
 }

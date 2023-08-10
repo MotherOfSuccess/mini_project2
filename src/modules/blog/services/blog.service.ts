@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { BlogEntity } from '../../../entities/blog.entity';
@@ -8,6 +8,8 @@ import { CategoryService } from '../../category/services/category.service';
 import { UpdateBlogDto } from '../dtos/update-blog.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager'
+import { NotFoundException } from '../../../exceptions/NotFoundException';
+
 
 @Injectable()
 export class BlogService {
@@ -18,24 +20,24 @@ export class BlogService {
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
     ){}
 
+
     async getAll(page: number, limit: number){
         const count = await this.blogReposity.count()
         const count_page = await parseInt((count/limit).toFixed())
 
-        if(count < limit || count_page < page){
-            throw new NotFoundException()
-        }
-        const blogs = await this.blogReposity.findAndCount({
+        const blogs = await this.blogReposity.find({
+            relations: {id_author: true, categoryid: true},
             skip: (page-1)*limit,
             take: limit,
-        })
-        if(blogs){
+        },)
+
+        if(blogs.length != 0){
 
             return {count_page, blogs}
 
         } else {
 
-            throw new NotFoundException("Blog not found")
+            return null
 
         }
     }
@@ -56,21 +58,28 @@ export class BlogService {
             return await this.blogReposity.save(blogCreate)
         }
 
-        throw new NotFoundException("User or Category not found")
+        return null
     }
 
-    async updateBlog(id: number, blogUpdate: UpdateBlogDto): Promise<UpdateResult>{
+    async updateBlog(id: number, blogUpdate: UpdateBlogDto): Promise<BlogEntity>{
         
         const user = await this.userService.findOneByID(blogUpdate.id_author)
         const category = await this.categoryService.findCategoryByID(blogUpdate.categoryid)
         const blog = await this.findBlogByID(id)
 
-        if(blog){
-            this.resetCache()
-            return await this.blogReposity.update({id: id}, {...blogUpdate, id_author: user, categoryid: category})
+        if(!user || !category){
+            throw new NotFoundException("User or Category")
         }
 
-        throw new NotFoundException("Blog is not found")
+        if(blog){
+            this.resetCache()
+            await this.blogReposity.update({id: id}, {...blogUpdate, id_author: user, categoryid: category})
+
+            const blogAfter = await this.findBlogByID(id)
+            return blogAfter
+
+        }
+        throw new NotFoundException("Blog")
     }
 
     async findBlogByID(id: number): Promise<BlogEntity> {
@@ -78,25 +87,24 @@ export class BlogService {
         const condition: FindOneOptions<BlogEntity> = await {where: {id: id}}
         const blog = await this.blogReposity.findOne(condition)
         
-        if(blog) {
-            return blog
-        }
-
-        throw new NotFoundException("Blog is not found")
+        return blog ?? null
     }
 
-    async deleteBlog(id: number): Promise<DeleteResult> {
+    async deleteBlog(id: number): Promise<BlogEntity> {
 
         const blog = await this.findBlogByID(id)
 
         if(blog){
+            
 
             this.resetCache()
 
-            return await this.blogReposity.delete({id: id})
+            await this.blogReposity.delete({id: id})    
+
+            return blog
         }
 
-        throw new NotFoundException("Blog not found")
+        throw new NotFoundException("Blog", "Not found blog to delete")
 
     }
 

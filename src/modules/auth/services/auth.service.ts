@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../../user/services/user.service';
@@ -6,6 +6,9 @@ import { LoginDto } from '../dtos/login.dto';
 import * as bcrypt from 'bcrypt' 
 import { renewDto } from '../dtos/renew.dto';
 import { UpdateResult } from 'typeorm';
+import { UnauthorizedException } from '../../../exceptions/UnauthorizedException';
+import { NotFoundException } from '../../../exceptions/NotFoundException';
+import { UserEntity } from 'src/entities/user.entity';
 
 
 @Injectable()
@@ -21,13 +24,13 @@ export class AuthService {
         const user = await this.userService.findOneByUsername(userLogin.username);
 
         if(user == null){
-            throw new UnauthorizedException()
+            throw new UnauthorizedException("login", "Username or Password is wrong");
         }
 
         const isMatch = await bcrypt.compare(userLogin.password, user.password)
 
         if(!isMatch){
-            throw new UnauthorizedException();
+            throw new UnauthorizedException("login", "Username or Password is wrong");
         }
 
         const refreshToken = await this.getRefreshToken(user.id, user.username);
@@ -78,35 +81,41 @@ export class AuthService {
             const user = await this.jwtService.verifyAsync(token.refreshToken);
             
             if(user){
-    
+                
                 const accessToken = await this.getAccessToken(user.id, user.username, token.refreshToken)
     
-                this.userService.updateUser(user.id, {accessToken: accessToken})
+                await this.userService.updateUser(user.id, {accessToken: accessToken})
     
                 return accessToken;
     
             } else {
 
-                throw new UnauthorizedException()
-
+                throw new UnauthorizedException("Token", "Jwt malformed")
             }
         } catch {
-            throw new UnauthorizedException("Jwt malformed")
+
+            throw new UnauthorizedException("Token", "Jwt malformed")
         }
 
     }
     
-    async logout(id: number): Promise<UpdateResult>{
+    async logout(id: number): Promise<any>{
 
         const user = this.userService.findOneByID(id)
         
         if(user){
 
-            return this.userService.updateUser(id, {accessToken: null, refreshToken: null})
+            this.userService.updateUser(id, {accessToken: null, refreshToken: null})
+
+            const userAfter = await this.userService.findOneByID(id)
+
+            return userAfter
 
         } else {
-            throw new NotFoundException("Không tìm thấy user")
+            throw new NotFoundException("User")
         }
 
     }
+
+
 }

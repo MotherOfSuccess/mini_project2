@@ -1,13 +1,12 @@
 import { 
     CanActivate, 
     ExecutionContext, 
-    Injectable, 
-    UnauthorizedException 
-
+    Injectable,  
 } from "@nestjs/common";
 
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
+import { UnauthorizedException } from "../../../exceptions/UnauthorizedException";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -19,7 +18,7 @@ export class AuthGuard implements CanActivate {
         const token = this.extractTokenFromHeader(request);
 
         if(!token) {
-            throw new UnauthorizedException()
+            throw new UnauthorizedException("Token")
         }
         
         try{   
@@ -28,7 +27,7 @@ export class AuthGuard implements CanActivate {
 
         }catch (error) {
 
-            throw new UnauthorizedException("Jwt malformed")
+            throw new UnauthorizedException("Token", "Jwt malformed")
         }
         
         return true

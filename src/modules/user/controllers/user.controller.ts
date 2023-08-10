@@ -1,8 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Res, UseInterceptors } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { AppInterceptor } from '../../../interceptors';
+import { getRespone } from '../../../utils';
+import { NotFoundException } from '../../../exceptions/NotFoundException';
+import { NotSuccessException } from '../../../exceptions/NotSuccessException';
+
 
 
 @UseInterceptors(AppInterceptor)
@@ -11,28 +15,48 @@ export class UserController {
     constructor ( private userService: UserService ) {}
 
     @Get('all')
-    findAll(){
-        return this.userService.findAll();
+    async findAll(){
+        const users = await this.userService.findAll();
+        if(users){
+            return getRespone(users, HttpStatus.OK, "Success")
+        }
+        throw new NotFoundException('All Users')
     }
 
     @Post('add-user')
-    addUser(@Body() user: CreateUserDto){
-        return this.userService.addUser(user);
+    async addUser(@Body() user: CreateUserDto){
+        const temp = await this.userService.addUser(user);
+        if(temp){
+             return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotSuccessException('add user')
     }
 
     @Get('find/:username')
-    findUser(@Param('username') username: string){
-        return this.userService.findOneByUsername(username);
+    async findUser(@Param('username') username: string){
+        const temp = await this.userService.findOneByUsername(username);
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotFoundException('username')
     }
 
     @Put('update/:id')
-    updateUser(@Param('id') id: number, @Body() user: UpdateUserDto){
-        return this.userService.updateUser(id, user)
+    async updateUser(@Param('id') id: number, @Body() user: UpdateUserDto){
+        const temp = await this.userService.updateUser(id, user)
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+       }
+       throw new NotSuccessException("update user", "Not found user to update")
     }
 
     @Delete('delete/:id')
-    deleteUser(@Param('id') id: number){
-        return this.userService.deleteUser(id)
+    async deleteUser(@Param('id') id: number){
+        const temp = await this.userService.deleteUser(id)
+        if(temp){
+            return getRespone(temp, HttpStatus.OK, "Success")
+        }
+        throw new NotSuccessException("delete user", "Not found user to delete")
     }
 
 

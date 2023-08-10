@@ -22,3 +22,15 @@ export const getKey = async (url: string) => {
 
     return key ?? null
 }
+
+
+export const getRespone = (data: any, errorCode: any, message: string, errors?: string[]) => {  
+    return {
+        data: data,
+        errorCode: errorCode,
+        message: message ,
+        errors: errors ?? null  
+    } 
+}
+
+

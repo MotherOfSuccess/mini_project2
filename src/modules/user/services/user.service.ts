@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException, Response } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository, UpdateResult } from 'typeorm';
 import { UserEntity } from '../../../entities/user.entity';
@@ -7,6 +7,8 @@ import { UpdateUserDto } from '../dtos/update-user.dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager'
+import { getRespone } from '../../../utils';
+import { NotSuccessException } from '../../../exceptions/NotSuccessException';
 
 @Injectable()
 export class UserService {
@@ -17,11 +19,7 @@ export class UserService {
     
     async findAll(): Promise<UserEntity[]>{
         const users = await this.userRepository.find()
-        if(users){
-            return users
-        }
-        throw new NotFoundException("Users not found")
-
+        return users ?? null
     }
 
     async addUser(userAdd: CreateUserDto){
@@ -38,7 +36,7 @@ export class UserService {
             return await this.userRepository.save(userTemp);
         }
 
-        throw new ForbiddenException()
+        return null
 
     }
     
@@ -47,12 +45,7 @@ export class UserService {
         const condition: FindOneOptions<UserEntity> = {where: {username: username}}
         const user = await this.userRepository.findOne(condition);
 
-        if(user){
-
-            return user;
-        }
-
-        return null
+        return user ?? null
 
     }
 
@@ -61,12 +54,7 @@ export class UserService {
         const condition: FindOneOptions<UserEntity> = await {where: {id: id}}
         const user = await this.userRepository.findOne(condition);
 
-        if(user){
-
-            return await user;
-        }
-
-        throw new NotFoundException("User is not found")
+        return user ?? null
 
     }
 
@@ -74,17 +62,24 @@ export class UserService {
         const user = await this.findOneByID(id)
 
         if(user){
+            try{
 
-            this.cacheManager.del("user_all")
-            
-            return await this.userRepository.delete({id: id})
+                this.cacheManager.del("user_all")
+                
+                await this.userRepository.delete({id: id})
+                
+                return user
+            }
+            catch {
+                throw new NotSuccessException("delete user", "This user is a foreign key on another table")
+            }
         }
 
-        throw new NotFoundException("User not found")
+        return null
         
     }
 
-    async updateUser(id: number, userUpdate: UpdateUserDto): Promise<UpdateResult>{
+    async updateUser(id: number, userUpdate: UpdateUserDto): Promise<UserEntity>{
 
         const user = await this.findOneByID(id)
 
@@ -96,14 +91,21 @@ export class UserService {
 
                 const hash = await this.hashPassword(userUpdate.password);
                 const userTemp = await {...userUpdate, password: hash}
+
+                await this.userRepository.update({id: id}, userTemp)
     
-                return await this.userRepository.update({id: id}, userTemp)
+            }
+            else{
+
+                await this.userRepository.update({id: id}, userUpdate)
             }
 
-            return await this.userRepository.update({id: id}, userUpdate)
+            const userAfter = await this.findOneByID(id)
+
+            return userAfter
         }
         
-        throw new NotFoundException("User not found")
+        return null
         
 
     }
@@ -115,7 +117,7 @@ export class UserService {
             return await bcrypt.hash(password, 10);
         }
 
-        throw "Password is empty"
+        return null
 
     }
 
