@@ -1,12 +1,9 @@
 import { 
     Body, 
     Controller, 
-    FileTypeValidator, 
     Get, 
     HttpStatus, 
-    MaxFileSizeValidator, 
     Param, 
-    ParseFilePipe, 
     Post, 
     Query, 
     Request, 
@@ -14,22 +11,25 @@ import {
     UseGuards, 
     UseInterceptors, 
 } from '@nestjs/common';
-import { BlogService } from '../services/blog.service';
-import { CreateBlogDto } from '../dtos/create-blog.dto';
+import { BlogService } from '../services/blog/blog.service';
+import { CreateBlogDto } from '../dtos/blog/create-blog.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
-import { UpdateBlogDto } from '../dtos/update-blog.dto';
+import { UpdateBlogDto } from '../dtos/blog/update-blog.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AppInterceptor } from '../../../interceptors';
-import { PaginateBlogDto } from '../dtos/paginate.dto';
-import { getRespone } from '../../../utils';
+import { PaginateBlogDto } from '../dtos/blog/paginate.dto';
+import { getExtensionFile, getRespone } from '../../../utils';
 import { NotFoundException } from '../../../exceptions/NotFoundException';
-import { NotSuccessException } from '../../../exceptions/NotSuccessException';
+import { NotSuccessException } from '../../../exceptions/NotSuccessException';;
+import { CreateImageDto } from '../dtos/image/create-image.dto';
+import { ImageService } from '../services/image/image.service';
 
 @UseInterceptors(AppInterceptor)
 @Controller('blog')
 export class BlogController {
     constructor(
         private blogService: BlogService,
+        private imageService: ImageService,
     ){}
 
     @Get('find/:id')
@@ -81,26 +81,30 @@ export class BlogController {
 
     @Post('upload/:id')
     @UseInterceptors(FilesInterceptor('image'))
-    uploadImage(@Param('id') id: number, @UploadedFiles(
-        new ParseFilePipe({
-            validators: [
+    async uploadImage(
 
-                new MaxFileSizeValidator({ maxSize: 100000 * 10 }),
-                new FileTypeValidator({ fileType: 'image' }),
+        @Param('id') id: number, 
+        @UploadedFiles() images: Array<Express.Multer.File>
 
-            ],
-
-            fileIsRequired: false,
-        })
-    ) images: Array<Express.Multer.File>) : any{
-        
-        const arrayImage = images.map((image) => {return image.destination})
-
-        const updateUrl: UpdateBlogDto = {image: arrayImage}
-        
-        this.blogService.updateBlog(id, updateUrl)
-
-        return getRespone(arrayImage, HttpStatus.OK, "Success")
+    ): Promise<any>{
+        if(images){
+            const imageFiles = images.map((img) => {
+                const createImage: CreateImageDto = {
+                    name: img.filename,
+                    destination: img.destination,
+                    extension: getExtensionFile(img.originalname),
+                    size: img.size,
+                }
+                return createImage
+            })
+            
+            imageFiles.forEach((imageFile) => {this.imageService.uploadImage(imageFile)})
+    
+            return getRespone(imageFiles, HttpStatus.OK, "Success")
+            
+        } else {
+            throw new NotSuccessException('upload', "No file to upload")
+        }
     }
     
 }

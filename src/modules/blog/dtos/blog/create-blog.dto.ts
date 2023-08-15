@@ -1,9 +1,7 @@
 import { Transform } from "class-transformer"
-import { IsNotEmpty } from "class-validator"
+import { IsArray, IsNotEmpty } from "class-validator"
 
 export class CreateBlogDto {
-
-    readonly id_author: number
 
     @IsNotEmpty()
     @Transform(({value}) => value?.toString().trim())
@@ -16,9 +14,8 @@ export class CreateBlogDto {
     @Transform(({value}) => value?.toString().trim())
     readonly content: string
 
-    readonly image?: string[]
+    @IsArray()
+    readonly image_id?: number[]
 
-
-    readonly datetime: Date
 
 }

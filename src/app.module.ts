@@ -11,6 +11,8 @@ import { applyMiddlewares } from './utils';
 import { CacheModule } from '@nestjs/cache-manager';
 import { cacheFactory } from './factories/cache.factory';
 import { typeormFactory } from './factories/typeorm.factory';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ImageService } from './modules/blog/services/image/image.service';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { typeormFactory } from './factories/typeorm.factory';
     AuthModule,
     CategoryModule,
     CacheModule.registerAsync(cacheFactory),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

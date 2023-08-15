@@ -1,5 +1,6 @@
-import { MiddlewareConsumer, RequestMethod } from "@nestjs/common";
+import { Inject, MiddlewareConsumer, RequestMethod } from "@nestjs/common";
 import { AppMiddleware } from "../middlewares";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
 export const applyMiddlewares = (consumer: MiddlewareConsumer) => {
     consumer
@@ -33,4 +34,10 @@ export const getRespone = (data: any, errorCode: any, message: string, errors?: 
     } 
 }
 
+export const getExtensionFile = (originalname: string) => {
 
+    const extension = originalname.split('.')[1]
+
+    return extension
+
+}

@@ -1,23 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOneOptions, Repository } from 'typeorm';
-import { BlogEntity } from '../../../entities/blog.entity';
-import { CreateBlogDto } from '../dtos/create-blog.dto';
-import { UserService } from '../../user/services/user.service';
-import { CategoryService } from '../../category/services/category.service';
-import { UpdateBlogDto } from '../dtos/update-blog.dto';
+import { Repository } from 'typeorm';
+import { BlogEntity } from '../../../../entities/blog.entity';
+import { CreateBlogDto } from '../../dtos/blog/create-blog.dto';
+import { UserService } from '../../../user/services/user.service';
+import { CategoryService } from '../../../category/services/category.service';
+import { UpdateBlogDto } from '../../dtos/blog/update-blog.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager'
-import { NotFoundException } from '../../../exceptions/NotFoundException';
-
+import { NotFoundException } from '../../../../exceptions/NotFoundException';
+import { ImageEntity } from '../../../../entities/image.entity';
+import { ImageService } from '../image/image.service';
 
 @Injectable()
 export class BlogService {
     constructor(
         @InjectRepository(BlogEntity) private readonly blogReposity: Repository<BlogEntity>,
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
         private readonly userService: UserService,
         private readonly categoryService: CategoryService,
-        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+        private readonly imageService: ImageService,
     ){}
 
 
@@ -26,7 +28,7 @@ export class BlogService {
         const count_page = await parseInt((count/limit).toFixed())
 
         const blogs = await this.blogReposity.find({
-            relations: {id_author: true, categoryid: true},
+            relations: {author: true, category: true},
             skip: (page-1)*limit,
             take: limit,
         },)
@@ -45,7 +47,6 @@ export class BlogService {
     async addBlog(blog: CreateBlogDto, id_author: number){
         const currentDate = new Date;
 
-
         const user = await this.userService.findOneByID(id_author)
         const category = await this.categoryService.findCategoryByID(blog.categoryid)
 
@@ -53,8 +54,15 @@ export class BlogService {
             
             this.resetCache()
 
-            const blogCreate = {...blog, datetime: currentDate, id_author: user, categoryid: category}
-    
+            const blogCreate = await {...blog, datetime: currentDate, id_author: id_author}
+            console.log(blog.image_id)
+
+            if(blog.image_id){
+                blog.image_id.forEach(async (id) => {
+                    await this.imageService.updateImageStatus(id)
+                })
+            }
+
             return await this.blogReposity.save(blogCreate)
         }
 
@@ -73,7 +81,8 @@ export class BlogService {
 
         if(blog){
             this.resetCache()
-            await this.blogReposity.update({id: id}, {...blogUpdate, id_author: user, categoryid: category})
+            // await this.blogReposity.update({id: id}, {...blogUpdate, author: user, category: category})
+            await this.blogReposity.update({id: id}, blogUpdate);
 
             const blogAfter = await this.findBlogByID(id)
             return blogAfter
@@ -84,10 +93,14 @@ export class BlogService {
 
     async findBlogByID(id: number): Promise<BlogEntity> {
 
-        const condition: FindOneOptions<BlogEntity> = await {where: {id: id}}
-        const blog = await this.blogReposity.findOne(condition)
-        
-        return blog ?? null
+        const _query = this.blogReposity.createQueryBuilder('blog')
+            .innerJoinAndSelect('blog.category', 'category')
+            .innerJoinAndSelect('blog.author', 'author')
+            .where('blog.id = :id')
+            .setParameters({ id })
+            
+        return await _query.getOne();
+
     }
 
     async deleteBlog(id: number): Promise<BlogEntity> {
@@ -107,6 +120,8 @@ export class BlogService {
         throw new NotFoundException("Blog", "Not found blog to delete")
 
     }
+
+    
 
     async resetCache(): Promise<void> {
         const keys = await this.cacheManager.store.keys("blog_all*")

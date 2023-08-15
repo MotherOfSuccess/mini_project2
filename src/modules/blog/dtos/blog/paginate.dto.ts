@@ -1,5 +1,5 @@
 import { IsNotEmpty } from "class-validator";
-import { IsBiggerThan } from "../../../decorators/decorator";
+import { IsBiggerThan } from "../../../../decorators/decorator";
 
 export class PaginateBlogDto {
 

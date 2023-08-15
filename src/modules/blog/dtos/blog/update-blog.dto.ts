@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer"
-import { IsBiggerThan } from "../../../decorators/decorator"
+import { IsBiggerThan } from "../../../../decorators/decorator"
 import { IsOptional } from "class-validator"
 
 export class UpdateBlogDto {
@@ -21,9 +21,6 @@ export class UpdateBlogDto {
     readonly content?: string
 
     @IsOptional()
-    readonly image?: string[]
-
-    @IsOptional()
-    readonly datetime?: Date
+    readonly image_id?: number[]
 
 }

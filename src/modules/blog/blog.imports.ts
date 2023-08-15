@@ -1,6 +1,6 @@
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { BlogEntity } from "../../entities/blog.entity";
-import { BlogService } from "./services/blog.service";
+import { BlogService } from "./services/blog/blog.service";
 import { BlogController } from "./controllers/blog.controller";
 import { CategotyEntity } from "../../entities/category.entity";
 import { UserEntity } from "../../entities/user.entity";
@@ -8,6 +8,8 @@ import { MulterModule } from "@nestjs/platform-express";
 import { multerFactory } from "../../factories/multer.factory";
 import { UserModule } from "../user/user.module";
 import { CategoryModule } from "../category/category.module";
+import { ImageEntity } from "../../entities/image.entity";
+import { ImageService } from "./services/image/image.service";
 
 
 export const modules = [
@@ -15,6 +17,7 @@ export const modules = [
         BlogEntity, 
         CategotyEntity, 
         UserEntity,
+        ImageEntity,
     ]),
     MulterModule.register(multerFactory),
     UserModule,
@@ -22,7 +25,7 @@ export const modules = [
 
 ]
 
-export const providers = [BlogService]
+export const providers = [BlogService, ImageService]
 
 export const controllers = [BlogController]
 
