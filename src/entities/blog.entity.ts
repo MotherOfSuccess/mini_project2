@@ -34,7 +34,7 @@ export class BlogEntity {
   @Column('bigint', { name: 'image_id', nullable: false, default: -1 })
   image_id: number;
 
-  @Column()
+  @Column('timestamp', { name: 'datetime', nullable: false, default: null })
   datetime: Date;
 
   @ManyToOne(() => CategotyEntity, (_category) => _category.id)

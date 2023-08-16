@@ -5,6 +5,11 @@ export class CategotyEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('varchar', { name: 'name', length: 50, nullable: false })
+  @Column('varchar', {
+    name: 'name',
+    length: 50,
+    nullable: false,
+    default: 'empty',
+  })
   name: string;
 }
