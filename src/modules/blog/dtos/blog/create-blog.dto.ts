@@ -1,21 +1,19 @@
-import { Transform } from "class-transformer"
-import { IsArray, IsNotEmpty } from "class-validator"
+import { Transform } from 'class-transformer';
+import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateBlogDto {
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.toString().trim())
+  readonly name: string;
 
-    @IsNotEmpty()
-    @Transform(({value}) => value?.toString().trim())
-    readonly name: string
+  @IsNotEmpty()
+  @IsNumber()
+  readonly categoryid: number;
 
-    @IsNotEmpty()
-    readonly categoryid: number
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.toString().trim())
+  readonly content: string;
 
-    @IsNotEmpty()
-    @Transform(({value}) => value?.toString().trim())
-    readonly content: string
-
-    @IsArray()
-    readonly image_id?: number[]
-
-
+  @IsNumber()
+  readonly image_id?: number;
 }

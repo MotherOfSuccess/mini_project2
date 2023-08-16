@@ -1,30 +1,49 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('users')
 export class UserEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column('varchar', {
+    name: 'name',
+    nullable: false,
+    length: 60,
+    default: 'empty',
+  })
+  name: string;
 
-    @Column({ length: 60 })
-    name: string;
+  @Column('varchar', {
+    name: 'name',
+    nullable: false,
+    length: 10,
+    default: 'empty',
+  })
+  gender: string;
 
-    @Column({ length: 10})
-    gender: string;
-    
-    @Column()
-    age: number;
+  @Column('smallint', { name: 'age', nullable: false, default: -1 })
+  age: number;
 
-    @Column({ length: 10, unique: true })
-    username: string;
+  @Column('varchar', {
+    name: 'username',
+    length: 10,
+    unique: true,
+    nullable: false,
+    default: 'empty',
+  })
+  username: string;
 
-    @Column({ length: 10})
-    password: string;
+  @Column('varchar', {
+    name: 'password',
+    length: 10,
+    nullable: false,
+    default: 'empty',
+  })
+  password: string;
 
-    @Column({ nullable: true, default: null })
-    refreshToken: string;
+  @Column('varchar', { name: 'refreshToken', nullable: true })
+  refreshToken: string;
 
-    @Column({ nullable: true, default: null })
-    accessToken: string;
-
+  @Column('varchar', { name: 'accessToken', nullable: true })
+  accessToken: string;
 }

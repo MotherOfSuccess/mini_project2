@@ -1,28 +1,35 @@
-import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface"
-import { diskStorage } from "multer"
-import { validateExtension } from "../utils"
-import { HttpException } from "@nestjs/common"
-import { ConfigService } from "@nestjs/config"
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { diskStorage } from 'multer';
+import { validateExtension, validateFileName, validateSize } from '../utils';
+import { HttpException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Configuration } from '../constant/enum/configuration.enum';
 
-
-export const multerFactory = (configService: ConfigService) => <MulterOptions> {
+export const multerFactory = (configService: ConfigService) =>
+  <MulterOptions>{
     storage: diskStorage({
-        destination: configService.get('DIRECTORY_IMAGE'),
-        filename(req, file, callback) {
-            callback(null, file.originalname)
-        },
+      destination: configService.get(Configuration.DIRECTORY_IMAGE),
+      filename(req, file, callback) {
+        callback(null, file.originalname);
+      },
     }),
-
     async fileFilter(req, file, callback) {
+      const validExtension = await validateExtension(file, configService);
+      const validSize = await validateSize(file, configService);
+      const validateName = await validateFileName(file);
 
-        let valid = await validateExtension(file)
-        console.log(file)
+      if (validExtension instanceof HttpException) {
+        return callback(validExtension, false);
+      }
 
-        if(valid instanceof HttpException){
+      if (validSize instanceof HttpException) {
+        return callback(validSize, false);
+      }
 
-            return callback(valid, false)
-        }
+      if (validateName instanceof HttpException) {
+        return callback(validateName, false);
+      }
 
-        return callback(valid, true)
-    }
-}
+      callback(null, true);
+    },
+  };

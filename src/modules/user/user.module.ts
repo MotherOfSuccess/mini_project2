@@ -5,6 +5,6 @@ import { controllers, exps, modules, providers } from './user.imports';
   imports: modules,
   controllers: controllers,
   providers: providers,
-  exports: exps
+  exports: exps,
 })
 export class UserModule {}

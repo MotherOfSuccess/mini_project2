@@ -5,78 +5,87 @@ import { FindOneOptions, Repository } from 'typeorm';
 import { CreateCategoryDto } from '../dtos/create-category.dto';
 import { UpdateCategoryDto } from '../dtos/update-category.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager'
+import { Cache } from 'cache-manager';
 import { NotSuccessException } from '../../../exceptions/NotSuccessException';
 import { NotFoundException } from '../../../exceptions/NotFoundException';
 
 @Injectable()
 export class CategoryService {
-    constructor(
-        @InjectRepository(CategotyEntity) private readonly categoryRepository: Repository<CategotyEntity>,
-        @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    ) { }
+  constructor(
+    @InjectRepository(CategotyEntity)
+    private readonly categoryRepository: Repository<CategotyEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
-    async getAll(): Promise<CategotyEntity[]> {
-        const categories = await this.categoryRepository.find()
+  async getAll(): Promise<CategotyEntity[]> {
+    const categories = await this.categoryRepository.find();
 
-        if (categories) {
+    if (categories) {
+      return categories;
+    }
+    return null;
+  }
 
-            return categories
-        }
-        return null
+  async addCategory(category: CreateCategoryDto): Promise<CategotyEntity> {
+    this.resetCache();
+
+    return await this.categoryRepository.save(category);
+  }
+
+  async updateCategory(
+    id: number,
+    categoryUpdate: UpdateCategoryDto,
+  ): Promise<CategotyEntity> {
+    const category = await this.findCategoryByID(id);
+
+    if (category) {
+      this.resetCache();
+      await this.categoryRepository.update({ id: id }, categoryUpdate);
+
+      const categoryAfter = await this.findCategoryByID(id);
+      return categoryAfter;
     }
 
-    async addCategory(category: CreateCategoryDto): Promise<CategotyEntity> {
+    throw new NotFoundException('Category', 'Not found category to update');
+  }
 
-        this.cacheManager.del("category_all")
+  async deleteCategory(id: number): Promise<CategotyEntity> {
+    const category = await this.findCategoryByID(id);
 
-        return await this.categoryRepository.save(category)
+    if (category) {
+      try {
+        this.resetCache();
+
+        await this.categoryRepository.delete({ id: id });
+
+        return category;
+      } catch {
+        throw new NotSuccessException(
+          'delete category',
+          'Category is a foreign key on another table',
+        );
+      }
     }
 
-    async updateCategory(id: number, categoryUpdate: UpdateCategoryDto): Promise<CategotyEntity> {
-        const category = await this.findCategoryByID(id)
+    throw new NotFoundException('Category', 'Not found category to delete');
+  }
 
-        if (category) {
-            this.cacheManager.del("category_all")
-            await this.categoryRepository.update({ id: id }, categoryUpdate)
+  async findCategoryByID(id: number): Promise<CategotyEntity> {
+    const option: FindOneOptions<CategotyEntity> = await { where: { id: id } };
+    const category = await this.categoryRepository.findOne(option);
 
-            const categoryAfter = await this.findCategoryByID(id)
-            return categoryAfter
-        }
-
-        throw new NotFoundException("Category", "Not found category to update")
-
+    if (category) {
+      return await this.categoryRepository.findOne(option);
     }
 
-    async deleteCategory(id: number): Promise<CategotyEntity> {
-        const category = await this.findCategoryByID(id)
+    return null;
+  }
 
-        if (category) {
-            try{
+  async resetCache(): Promise<void> {
+    const keys = await this.cacheManager.store.keys('category*');
 
-                this.cacheManager.del("category_all")
-                await this.categoryRepository.delete({ id: id })
-
-                return category
-                
-            } catch {
-                throw new NotSuccessException('delete category', "Category is a foreign key on another table")
-            }
-        }
-
-        throw new NotFoundException("Category", "Not found category to delete")
-    }
-
-    async findCategoryByID(id: number): Promise<CategotyEntity> {
-        const option: FindOneOptions<CategotyEntity> = await { where: { id: id } }
-        const category = await this.categoryRepository.findOne(option)
-
-        if (category) {
-
-            return await this.categoryRepository.findOne(option)
-        }
-
-        return null
-
-    }
+    keys.forEach((k) => {
+      this.cacheManager.del(k);
+    });
+  }
 }

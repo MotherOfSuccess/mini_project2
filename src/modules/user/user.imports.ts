@@ -1,14 +1,12 @@
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { UserEntity } from "./../../entities/user.entity";
-import { UserService } from "./services/user.service";
-import { UserController } from "./controllers/user.controller";
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from './../../entities/user.entity';
+import { UserService } from './services/user.service';
+import { UserController } from './controllers/user.controller';
 
-export const modules = [
-    TypeOrmModule.forFeature([UserEntity])
-]
+export const modules = [TypeOrmModule.forFeature([UserEntity])];
 
-export const providers = [UserService]
+export const providers = [UserService];
 
-export const controllers = [UserController]
+export const controllers = [UserController];
 
-export const exps = [UserService]
+export const exps = [UserService];

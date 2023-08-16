@@ -16,11 +16,9 @@ import { ImageService } from './modules/blog/services/image/image.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(
-      { 
-        isGlobal: true,
-      }
-    ),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRootAsync(typeormFactory),
     BlogModule,
     UserModule,
@@ -32,9 +30,8 @@ import { ImageService } from './modules/blog/services/image/image.service';
   controllers: [AppController],
   providers: [AppService],
 })
-
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-      applyMiddlewares(consumer)
+    applyMiddlewares(consumer);
   }
 }

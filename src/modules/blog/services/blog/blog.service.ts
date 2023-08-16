@@ -7,130 +7,142 @@ import { UserService } from '../../../user/services/user.service';
 import { CategoryService } from '../../../category/services/category.service';
 import { UpdateBlogDto } from '../../dtos/blog/update-blog.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager'
+import { Cache } from 'cache-manager';
 import { NotFoundException } from '../../../../exceptions/NotFoundException';
-import { ImageEntity } from '../../../../entities/image.entity';
 import { ImageService } from '../image/image.service';
+import { NotSuccessException } from '../../../../exceptions/NotSuccessException';
 
 @Injectable()
 export class BlogService {
-    constructor(
-        @InjectRepository(BlogEntity) private readonly blogReposity: Repository<BlogEntity>,
-        @Inject(CACHE_MANAGER) private cacheManager: Cache,
-        private readonly userService: UserService,
-        private readonly categoryService: CategoryService,
-        private readonly imageService: ImageService,
-    ){}
+  constructor(
+    @InjectRepository(BlogEntity)
+    private readonly blogReposity: Repository<BlogEntity>,
 
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
 
-    async getAll(page: number, limit: number){
-        const count = await this.blogReposity.count()
-        const count_page = await parseInt((count/limit).toFixed())
+    private readonly userService: UserService,
 
-        const blogs = await this.blogReposity.find({
-            relations: {author: true, category: true},
-            skip: (page-1)*limit,
-            take: limit,
-        },)
+    private readonly categoryService: CategoryService,
 
-        if(blogs.length != 0){
+    private readonly imageService: ImageService,
+  ) {}
 
-            return {count_page, blogs}
+  async getAll(page: number, limit: number) {
+    const count = await this.blogReposity.count();
 
-        } else {
+    const count_page = await parseInt((count / limit).toFixed());
 
-            return null
+    const blogs = await this.blogReposity.find({
+      relations: { author: true, category: true, image: true },
 
-        }
+      skip: (page - 1) * limit,
+
+      take: limit,
+    });
+
+    if (blogs.length != 0) {
+      return { count_page, blogs };
+    } else {
+      return null;
+    }
+  }
+
+  async addBlog(blog: CreateBlogDto, id_author: number) {
+    const currentDate = new Date();
+
+    const category = await this.categoryService.findCategoryByID(
+      blog.categoryid,
+    );
+
+    if (category) {
+      this.resetCache();
+
+      const blogCreate = await {
+        ...blog,
+        datetime: currentDate,
+        id_author: id_author,
+      };
+      console.log(blog.image_id);
+
+      await this.imageService.updateImageStatus(blog.image_id);
+
+      return await this.blogReposity.save(blogCreate);
     }
 
-    async addBlog(blog: CreateBlogDto, id_author: number){
-        const currentDate = new Date;
+    return null;
+  }
 
-        const user = await this.userService.findOneByID(id_author)
-        const category = await this.categoryService.findCategoryByID(blog.categoryid)
+  async updateBlog(
+    id_blog: number,
+    blogUpdate: UpdateBlogDto,
+    id_author: number,
+  ): Promise<BlogEntity> {
+    const category = await this.categoryService.findCategoryByID(
+      blogUpdate.categoryid,
+    );
 
-        if(user && category){
-            
-            this.resetCache()
+    const image = await this.imageService.findImageByID(blogUpdate.image_id);
 
-            const blogCreate = await {...blog, datetime: currentDate, id_author: id_author}
-            console.log(blog.image_id)
+    const blog = await this.findBlogByID(id_blog);
 
-            if(blog.image_id){
-                for(let i = 0; i<blog.image_id.length; i++){
+    if (blog) {
+      if (id_author != blog.id_author) {
+        throw new NotSuccessException('update blog', 'You are not author');
+      }
+      console.log('Run here');
 
-                    await this.imageService.updateImageStatus(blog.image_id[i])
-                }
-                // blog.image_id.forEach((id) => {
-                //     this.imageService.updateImageStatus(id)
-                // })
-            }
+      if (!category) {
+        throw new NotFoundException('Category');
+      }
 
-            return await this.blogReposity.save(blogCreate)
-        }
+      if (!image) {
+        throw new NotFoundException('Image');
+      }
+      this.resetCache();
 
-        return null
+      await this.blogReposity.update({ id: id_blog }, blogUpdate);
+
+      const blogAfter = await this.findBlogByID(id_blog);
+
+      return blogAfter;
     }
 
-    async updateBlog(id: number, blogUpdate: UpdateBlogDto): Promise<BlogEntity>{
-        
-        const user = await this.userService.findOneByID(blogUpdate.id_author)
-        const category = await this.categoryService.findCategoryByID(blogUpdate.categoryid)
-        const blog = await this.findBlogByID(id)
+    throw new NotFoundException('Blog');
+  }
 
-        if(!user || !category){
-            throw new NotFoundException("User or Category")
-        }
+  async findBlogByID(id: number): Promise<BlogEntity> {
+    const _query = this.blogReposity
+      .createQueryBuilder('blog')
+      .innerJoinAndSelect('blog.category', 'category')
+      .innerJoinAndSelect('blog.author', 'author')
+      .innerJoinAndSelect('blog.image', 'image')
+      .where('blog.id = :id')
+      .setParameters({ id });
 
-        if(blog){
-            this.resetCache()
-            // await this.blogReposity.update({id: id}, {...blogUpdate, author: user, category: category})
-            await this.blogReposity.update({id: id}, blogUpdate);
+    return await _query.getOne();
+  }
 
-            const blogAfter = await this.findBlogByID(id)
-            return blogAfter
+  async deleteBlog(id_blog: number, id_author): Promise<BlogEntity> {
+    const blog = await this.findBlogByID(id_blog);
+    if (id_author != blog.id_author) {
+      throw new NotSuccessException('delete blog', 'You are not author');
+    }
+    if (blog) {
+      this.resetCache();
 
-        }
-        throw new NotFoundException("Blog")
+      await this.blogReposity.delete({ id: id_blog });
+
+      return blog;
     }
 
-    async findBlogByID(id: number): Promise<BlogEntity> {
+    throw new NotFoundException('Blog', 'Not found blog to delete');
+  }
 
-        const _query = this.blogReposity.createQueryBuilder('blog')
-            .innerJoinAndSelect('blog.category', 'category')
-            .innerJoinAndSelect('blog.author', 'author')
-            .where('blog.id = :id')
-            .setParameters({ id })
-            
-        return await _query.getOne();
+  async resetCache(): Promise<void> {
+    const keys = await this.cacheManager.store.keys('blog_all*');
 
-    }
-
-    async deleteBlog(id: number): Promise<BlogEntity> {
-
-        const blog = await this.findBlogByID(id)
-
-        if(blog){
-            
-
-            this.resetCache()
-
-            await this.blogReposity.delete({id: id})    
-
-            return blog
-        }
-
-        throw new NotFoundException("Blog", "Not found blog to delete")
-
-    }
-
-    
-
-    async resetCache(): Promise<void> {
-        const keys = await this.cacheManager.store.keys("blog_all*")
-        keys.forEach((k) => {
-            this.cacheManager.del(k)
-        })
-    }
+    keys.forEach((k) => {
+      this.cacheManager.del(k);
+    });
+  }
 }
