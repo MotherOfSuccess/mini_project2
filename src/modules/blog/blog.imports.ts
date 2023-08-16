@@ -10,6 +10,7 @@ import { UserModule } from "../user/user.module";
 import { CategoryModule } from "../category/category.module";
 import { ImageEntity } from "../../entities/image.entity";
 import { ImageService } from "./services/image/image.service";
+import { ConfigService } from "@nestjs/config";
 
 
 export const modules = [
@@ -19,7 +20,11 @@ export const modules = [
         UserEntity,
         ImageEntity,
     ]),
-    MulterModule.register(multerFactory),
+    MulterModule.registerAsync(
+        imports: [],
+        inject: [ConfigService],
+        useFactory: multerFactory,
+    ),
     UserModule,
     CategoryModule,
 

@@ -24,30 +24,42 @@ export class ImageService {
     }
 
     async uploadImage(image: CreateImageDto): Promise<ImageEntity>{
+        const imageDB = await this.imageReposity.createQueryBuilder('image')
+                .getMany()
 
+        const nameImageTrue = imageDB.map((image) => {return image.name})
+        if(nameImageTrue.includes(image.name)){
+            return
+        }
         return await this.imageReposity.save(image)
     }
 
-    @Cron(CronExpression.EVERY_10_MINUTES)
+    @Cron(CronExpression.EVERY_30_SECONDS)
     async deleteImageTemp(): Promise<void>{
         console.log('Run delete')
-        const imageTemp = await this.imageReposity.createQueryBuilder('image')
+        const imageStatusFalse = await this.imageReposity.createQueryBuilder('image')
                 .where('status = :status', {status: false})
                 .getMany()
 
+        const imageStatusTrue = await this.imageReposity.createQueryBuilder('image')
+                .where('status = :status', {status: true})
+                .getMany()
 
-        if(imageTemp){
+        if(imageStatusFalse){
             
-            imageTemp.forEach((img) => {
+            imageStatusFalse.forEach((img) => {
+                if(!imageStatusTrue.includes(img) && fs.existsSync(join(process.env.DIRECTORY_IMAGE, img.name))){
 
-                fs.unlinkSync(join(__dirname, '../../../../images', img.name))
+                    fs.unlinkSync(join(process.env.DIRECTORY_IMAGE, img.name))
+                }
+                
             })
         }
 
         await this.imageReposity.createQueryBuilder('images')
                     .delete()
                     .from(ImageEntity)
-                    .where('status = :false', {false: false})
+                    .where('status = :status', {status: false})
                     .execute()
         
     }
@@ -67,7 +79,7 @@ export class ImageService {
         }
 
         else {
-            return new NotFoundException('image')
+            throw new NotFoundException('image')
         }
 
     }

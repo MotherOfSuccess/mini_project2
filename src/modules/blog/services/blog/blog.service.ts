@@ -58,9 +58,13 @@ export class BlogService {
             console.log(blog.image_id)
 
             if(blog.image_id){
-                blog.image_id.forEach(async (id) => {
-                    await this.imageService.updateImageStatus(id)
-                })
+                for(let i = 0; i<blog.image_id.length; i++){
+
+                    await this.imageService.updateImageStatus(blog.image_id[i])
+                }
+                // blog.image_id.forEach((id) => {
+                //     this.imageService.updateImageStatus(id)
+                // })
             }
 
             return await this.blogReposity.save(blogCreate)

@@ -1,6 +1,6 @@
-import { Inject, MiddlewareConsumer, RequestMethod } from "@nestjs/common";
+import { MiddlewareConsumer, RequestMethod } from "@nestjs/common";
 import { AppMiddleware } from "../middlewares";
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { NotSuccessException } from "../exceptions/NotSuccessException";
 
 export const applyMiddlewares = (consumer: MiddlewareConsumer) => {
     consumer
@@ -11,7 +11,6 @@ export const applyMiddlewares = (consumer: MiddlewareConsumer) => {
             {path: 'user/all', method: RequestMethod.GET},
         )
 }
-
 
 export const getKey = async (url: string) => {
 
@@ -24,7 +23,6 @@ export const getKey = async (url: string) => {
     return key ?? null
 }
 
-
 export const getRespone = (data: any, errorCode: any, message: string, errors?: string[]) => {  
     return {
         data: data,
@@ -34,10 +32,19 @@ export const getRespone = (data: any, errorCode: any, message: string, errors?: 
     } 
 }
 
-export const getExtensionFile = (originalname: string) => {
+export const validateExtension = (file: any) => {
+    const extensionSafe = ['image/jpg', 'image/png', 'image/jpeg']
 
-    const extension = originalname.split('.')[1]
+    if(!extensionSafe.includes(file.mimetype)){
+        
+        return new NotSuccessException('upload', 'Type of file is not available')
+    } 
+}
 
-    return extension
+export const validateSize = (file: Express.Multer.File) => {
+    const size = file.size
+    if(size > 100000) { 
+        return new NotSuccessException('upload', 'Files too large')
+    }
 
 }

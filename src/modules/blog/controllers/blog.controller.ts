@@ -18,7 +18,7 @@ import { UpdateBlogDto } from '../dtos/blog/update-blog.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AppInterceptor } from '../../../interceptors';
 import { PaginateBlogDto } from '../dtos/blog/paginate.dto';
-import { getExtensionFile, getRespone } from '../../../utils';
+import { getRespone } from '../../../utils';
 import { NotFoundException } from '../../../exceptions/NotFoundException';
 import { NotSuccessException } from '../../../exceptions/NotSuccessException';;
 import { CreateImageDto } from '../dtos/image/create-image.dto';
@@ -79,26 +79,25 @@ export class BlogController {
         throw new NotSuccessException('delete blog')
     }
 
-    @Post('upload/:id')
+    @Post('upload')
     @UseInterceptors(FilesInterceptor('image'))
     async uploadImage(
-
-        @Param('id') id: number, 
         @UploadedFiles() images: Array<Express.Multer.File>
-
     ): Promise<any>{
-        if(images){
+        if(images.length > 0){
             const imageFiles = images.map((img) => {
                 const createImage: CreateImageDto = {
                     name: img.filename,
                     destination: img.destination,
-                    extension: getExtensionFile(img.originalname),
+                    extension: img.mimetype,
                     size: img.size,
                 }
                 return createImage
             })
             
-            imageFiles.forEach((imageFile) => {this.imageService.uploadImage(imageFile)})
+            imageFiles.forEach((imageFile) => {
+                this.imageService.uploadImage(imageFile)
+            })
     
             return getRespone(imageFiles, HttpStatus.OK, "Success")
             
