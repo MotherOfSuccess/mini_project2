@@ -75,7 +75,7 @@ export class CategoryService {
     const category = await this.categoryRepository.findOne(option);
 
     if (category) {
-      return await this.categoryRepository.findOne(option);
+      return category;
     }
 
     return null;

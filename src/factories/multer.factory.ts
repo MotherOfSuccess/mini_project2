@@ -10,7 +10,7 @@ export const multerFactory = (configService: ConfigService) =>
     storage: diskStorage({
       destination: configService.get(Configuration.DIRECTORY_IMAGE),
       filename(req, file, callback) {
-        callback(null, file.originalname);
+        callback(null, `${file.fieldname}_${Date.now()}_${file.originalname}`);
       },
     }),
     async fileFilter(req, file, callback) {

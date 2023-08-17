@@ -29,7 +29,6 @@ export class UserEntity {
     length: 10,
     unique: true,
     nullable: false,
-    default: 'empty',
   })
   username: string;
 
@@ -37,7 +36,6 @@ export class UserEntity {
     name: 'password',
     length: 10,
     nullable: false,
-    default: 'empty',
   })
   password: string;
 
