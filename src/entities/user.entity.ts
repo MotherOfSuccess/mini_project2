@@ -41,9 +41,9 @@ export class UserEntity {
   })
   password: string;
 
-  @Column('varchar', { name: 'refreshToken', nullable: true })
+  @Column('varchar', { name: 'refreshToken', nullable: true, select: false })
   refreshToken: string;
 
-  @Column('varchar', { name: 'accessToken', nullable: true })
+  @Column('varchar', { name: 'accessToken', nullable: true, select: false })
   accessToken: string;
 }
